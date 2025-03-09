@@ -1,6 +1,7 @@
 const axios = require('axios').default;
 const https = require('https');
-const cors = require('cors');
+const { findAttributeByCode,findSizeLabelByValue,findColorLabelByValue } = require('../utils/utils.js')
+const {CategoryFormatter} = require('./CategoryFormatter.js')
 
 const { PORT, USERTOKEN } = require('../constants.js');
 const agent = new https.Agent({ rejectUnauthorized: false })
@@ -12,7 +13,7 @@ const options = {
         'Authorization': `Bearer ${USERTOKEN}`
     }
 }
-class Formater {
+class ProductFormatter {
 
     static transformCategoryData(categories) {
         // Helper function to recursively build the ancestor list
@@ -78,41 +79,7 @@ class Formater {
             return attributesMap;
         }
 
-        // Helper function to find attribute from custom attributes by code
-        function findAttributeByCode(customAttributes, code) {
-            const attr = customAttributes.find(attr => attr.attribute_code === code);
-            return attr ? { key: attr.value, label: attr.value } : null;  // Simplified, usually label needs better mapping
-        }
-
-        async function findColorLabelByValue(value) {
-            try {
-                const label = await axios.get('https://magento.test/rest/V1/products/attributes/color',
-                    {
-                        httpsAgent: agent,
-                        headers: options.headers,
-                    }
-                );                
-                console.log('Color status '+value.value,label.status)
-                return label.data.options.find((Element) => Element.value === value).label;
-            } catch (error) {
-                console.log(error)
-            }
-        }
-
-        async function findSizeLabelByValue(value) {
-            try {
-                const label = await axios.get('https://magento.test/rest/V1/products/attributes/size',
-                    {
-                        httpsAgent: agent,
-                        headers: options.headers,
-                    }
-                );                
-                console.log('Size status '+value,label.status)
-                return label.data.options.find((Element) => Element.value === value).label;
-            } catch (error) {
-                console.log(error)
-            }
-        }
+        
 
         return await Promise.all( magentoProducts.map(async product => {
             const customAttributes = mapCustomAttributes(product.custom_attributes);
@@ -132,14 +99,14 @@ class Formater {
                             name: "Color",
                             value: {
                                 key: findAttributeByCode(product.custom_attributes, "color"),
-                                label: 'ola'
+                                label: await findColorLabelByValue(findAttributeByCode(product.custom_attributes, "color"),agent,options)
                             }
                         },
                         {
                             name: "Size",
                             value: {
                                 key: findAttributeByCode(product.custom_attributes, "size"),
-                                label: 'ola'/* await findSizeLabelByValue(findAttributeByCode(product.custom_attributes, "size")) */
+                                label: await findSizeLabelByValue(findAttributeByCode(product.custom_attributes, "size"),agent,options)
                             }
                         }
                     ],
@@ -156,16 +123,16 @@ class Formater {
                             name: "Color",
                             value: {
                                 key: findAttributeByCode(product.custom_attributes, "color"),
-                                label: 'ola'/* await findColorLabelByValue(findAttributeByCode(product.custom_attributes, "color")) */
+                                label: await findColorLabelByValue(findAttributeByCode(product.custom_attributes, "color"),agent,options)
                             }
                         },
-                        /* {
+                        {
                             name: "Size",
                             value: {
                                 key: findAttributeByCode(product.custom_attributes, "size"),
-                                label: await findSizeLabelByValue(findAttributeByCode(product.custom_attributes, "size"))
+                                label: await findSizeLabelByValue(findAttributeByCode(product.custom_attributes, "size"),agent,options)
                             }
-                        } */
+                        }
                     ],
                     slug: customAttributes.url_key,
                     name: product.name
@@ -193,12 +160,8 @@ class Formater {
                         headers: options.headers,
                     }
                 );
-                console.log({
-                    results: await Formater.transformMagentoProductsToStorefront(result.data['items']),
-                    total_count: result.data['items'].length,
-                });
                 return {
-                    results: await Formater.transformMagentoProductsToStorefront(result.data['items']),
+                    results: await CategoryFormatter.transformMagentoProductsToStorefront(result.data['items']),
                     total_count: result.data['items'].length,
                 };
             } catch (error) {
@@ -217,9 +180,6 @@ class Formater {
                         headers: options.headers,
                     }
                 );
-                console.log({
-                    results: Formater.transformMagentoProductToStorefront(result.data),
-                });
                 return await getVariantsFromMagento(result.data.extension_attributes.configurable_product_links)
             } catch (error) {
                 console.log('error', error);
@@ -234,7 +194,7 @@ class Formater {
                     "id": element.id,
                     "sku": element.masterVariant.sku,
                     "prices": element.masterVariant.prices,
-                    "images": [element.masterVariant.images],
+                    "images": element.masterVariant.images,
                     "attributes": element.masterVariant.attributes,
                     "slug": element.masterVariant.slug,
                     "name": element.masterVariant.name
@@ -293,7 +253,6 @@ class Formater {
         // Build the variants (loop through configurable product links)
         const linkIds = extensionAttributes.configurable_product_links || [];
         const variantsQuery = await getVariantsFromMagento(linkIds)
-        console.log('VARIANTS: ',variantsQuery, linkIds)
         storefrontProduct.variants = variantsQuery['results']
 
         // Assign the first variant as the master variant
@@ -313,15 +272,15 @@ class Formater {
                     {
                         "name": "Color",
                         "value": {
-                            "key": "50",
-                            "label": "Blue"
+                            "key": findAttributeByCode(magentoProduct.custom_attributes, "color"),                            
+                            "label": await findColorLabelByValue(findAttributeByCode(magentoProduct.custom_attributes, "color"),agent,options) 
                         }
                     },
                     {
                         "name": "Size",
                         "value": {
-                            "key": "167",
-                            "label": "S"
+                            "key": findAttributeByCode(magentoProduct.custom_attributes, "size"),
+                            "label": await findSizeLabelByValue(findAttributeByCode(magentoProduct.custom_attributes, "size"),agent,options)
                         }
                     }
                 ],
@@ -334,4 +293,4 @@ class Formater {
     }
 }
 
-exports.Formater = Formater
+exports.ProductFormatter = ProductFormatter

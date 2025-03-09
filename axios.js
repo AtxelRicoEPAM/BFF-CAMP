@@ -1,7 +1,7 @@
 const { USERTOKEN } = require('./constants.js')
 const axios = require('axios').default;
 const https = require('https')
-const {Formater} = require('./categories/Formatter.js')
+const {Formater} = require('./Formatters/CategoryFormatter.js')
 
 
 console.log(`token: ${USERTOKEN}`)
@@ -37,7 +37,6 @@ class test {
                 headers: options.headers,
             }
         );
-        console.log('LABEL TIPO ATX ' + label.status)
         return label.data.options.find((Element) => Element.value === value).label;
     } catch (error) {
         console.log(error)
@@ -72,7 +71,7 @@ class test {
 
     static async getColor(){
         const a = await test.findColorLabelByValue('60')
-        console.log(a)
+        return a
     }
 
     static async getList(){
@@ -82,4 +81,5 @@ class test {
 
 }
 
-test.getList()
+const res = await test.getColor()
+console.log(res)

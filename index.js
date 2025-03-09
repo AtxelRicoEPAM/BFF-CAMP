@@ -4,7 +4,8 @@ const https = require('https');
 const cors = require('cors');
 const app = require('express')();
 
-const {Formater} = require('./categories/Formatter.js')
+const {CategoryFormatter} = require('./Formatters/CategoryFormatter.js')
+const {ProductFormatter} = require('./Formatters/ProductFormatter.js')
 const {PORT, USERTOKEN} = require('./constants.js');
 const agent = new https.Agent({rejectUnauthorized: false})
 
@@ -25,7 +26,7 @@ app.get('/categories', (req, res) => {
             headers: options.headers
         })
         .then((result) => {            
-            res.status(201).send(Formater.transformCategoryData([result.data]))
+            res.status(201).send(CategoryFormatter.transformCategoryData([result.data]))
         }
         )
         .catch(function (error) {
@@ -46,7 +47,7 @@ app.get('/products',(req,res)=>{
         })
         .then(async (result) => {
             console.log('category item count '+result.data['items'].length)
-            res.status(201).send({'results':await Formater.transformMagentoProductsToStorefront(result.data['items']), 'total': result.data['items'].length, 'limit':req.query['limit'], 'offset':req.query['offset']})
+            res.status(201).send({'results':await CategoryFormatter.transformMagentoProductsToStorefront(result.data['items']), 'total': result.data['items'].length, 'limit':req.query['limit'], 'offset':req.query['offset']})
         }
         )
         .catch(function (error) {
@@ -65,7 +66,7 @@ app.get('/products/:sku', (req,res) => {
         })
         .then(async (result) => {
             
-            res.status(201).send(await Formater.transformMagentoProductToStorefront(result.data))
+            res.status(201).send(await ProductFormatter.transformMagentoProductToStorefront(result.data))
         }
         )
         .catch(function (error) {
