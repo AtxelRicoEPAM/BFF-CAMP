@@ -220,12 +220,26 @@ class Formater {
                 console.log({
                     results: Formater.transformMagentoProductToStorefront(result.data),
                 });
-                return await getVariantsFromMagento(arrayToCSV(result.data.extension_attributes.configurable_product_links))
+                return await getVariantsFromMagento(result.data.extension_attributes.configurable_product_links)
             } catch (error) {
                 console.log('error', error);
                 // Explicit error handling
                 throw error; // or return an error object as needed
             }
+        }
+
+        function formatProductToVariant(product){
+            return product.map((element) => {
+                return  {
+                    "id": element.id,
+                    "sku": element.masterVariant.sku,
+                    "prices": element.masterVariant.prices,
+                    "images": [element.masterVariant.images],
+                    "attributes": element.masterVariant.attributes,
+                    "slug": element.masterVariant.slug,
+                    "name": element.masterVariant.name
+                }
+            })
         }
         // Helper function to format price
         function formatPrice(price) {
@@ -288,12 +302,13 @@ class Formater {
         }
 
         if (storefrontProduct.variants.length === 0) {
-            storefrontProduct.variant = await getVariantsFromBaseProduct(magentoProduct.sku)
+            storefrontProduct.variants =  await (await getVariantsFromBaseProduct(magentoProduct.sku)).results
+            storefrontProduct.variants = formatProductToVariant(storefrontProduct.variants)
             storefrontProduct.masterVariant = {
                 "id": storefrontProduct.id,
                 "sku": magentoProduct.sku,
                 "prices": storefrontProduct.prices,
-                "images": storefrontProduct.images,
+                "images": [storefrontProduct.images],
                 "attributes": [
                     {
                         "name": "Color",
