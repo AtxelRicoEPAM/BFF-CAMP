@@ -132,8 +132,6 @@ class ProductController {
     }
 
     static async transformMagentoProductToStorefront(magentoProduct) {
-        console.log('MAGENTO PRODUCT '+magentoProduct)
-
         function arrayToCSV(arrayToTransform) {
             const stringGenerated = arrayToTransform.reduce((accumulator, current) =>
                 accumulator + `,${current}`
