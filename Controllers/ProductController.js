@@ -1,19 +1,9 @@
 const axios = require('axios').default;
-const https = require('https');
 const { findAttributeByCode,findSizeLabelByValue,findColorLabelByValue } = require('../utils/utils.js')
-const {CategoryFormatter} = require('./CategoryFormatter.js')
+const {CategoryController} = require('./CategoryController.js')
 
-const { PORT, USERTOKEN } = require('../constants.js');
-const agent = new https.Agent({ rejectUnauthorized: false })
-
-const options = {
-    method: 'GET',
-    headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${USERTOKEN}`
-    }
-}
-class ProductFormatter {
+const { agent, options } = require('../constants.js');
+class ProductController {
 
     static transformCategoryData(categories) {
         // Helper function to recursively build the ancestor list
@@ -161,7 +151,7 @@ class ProductFormatter {
                     }
                 );
                 return {
-                    results: await CategoryFormatter.transformMagentoProductsToStorefront(result.data['items']),
+                    results: await CategoryController.transformMagentoProductsToStorefront(result.data['items']),
                     total_count: result.data['items'].length,
                 };
             } catch (error) {
@@ -293,4 +283,4 @@ class ProductFormatter {
     }
 }
 
-exports.ProductFormatter = ProductFormatter
+exports.ProductController = ProductController

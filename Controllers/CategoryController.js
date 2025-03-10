@@ -1,18 +1,8 @@
-const axios = require('axios').default;
-const https = require('https');
 const { findAttributeByCode,findSizeLabelByValue,findColorLabelByValue } = require('../utils/utils.js')
 
-const { PORT, USERTOKEN } = require('../constants.js');
-const agent = new https.Agent({ rejectUnauthorized: false })
+const { agent,options } = require('../constants.js');
 
-const options = {
-    method: 'GET',
-    headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${USERTOKEN}`
-    }
-}
-class CategoryFormatter {
+class CategoryController {
 
     static transformCategoryData(categories) {
         // Helper function to recursively build the ancestor list
@@ -141,4 +131,4 @@ class CategoryFormatter {
     }
 }
 
-exports.CategoryFormatter = CategoryFormatter
+exports.CategoryController = CategoryController

@@ -180,6 +180,7 @@ function findAttributeByCode(customAttributes, code) {
 }
 
 async function findSizeLabelByValue(value,agent,options) {
+    console.log('Size label ', value)
     try {
         const label = await axios.get('https://magento.test/rest/V1/products/attributes/size',
             {
@@ -190,10 +191,12 @@ async function findSizeLabelByValue(value,agent,options) {
         return label.data.options.find((Element) => Element.value === value).label;
     } catch (error) {
         console.log(error)
+        return 'N/A'
     }
 }
 
 async function findColorLabelByValue(value,agent,options) {
+    console.log('Color label ', value)
     try {
         const label = await axios.get('https://magento.test/rest/V1/products/attributes/color',
             {
@@ -205,6 +208,7 @@ async function findColorLabelByValue(value,agent,options) {
         return label.data.options.find((Element) => Element.value === value).label;
     } catch (error) {
         console.log(error)
+        return 'N/A'
     }
 }
 
