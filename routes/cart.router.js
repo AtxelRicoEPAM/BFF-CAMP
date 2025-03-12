@@ -42,7 +42,12 @@ router.get('/carts/:id',async (req,res) => {
 
 router.put('/carts/:id', async (req, res) => {
     console.log(req.body)
-    return await controller.determineAction(req);
+    try{
+        res.status(201).send(await controller.determineAction(req));
+    }catch(error){
+        res.status(400).send({message:`something went wrong. ${error}`});
+
+    }
 });
 
 module.exports = router
