@@ -2,9 +2,10 @@ const express = require('express');
 const axios = require('axios').default;
 const router = express.Router();
 
-const CartController = require('../controllers/CartController.js');
+const {CartController} = require('../controllers/CartController.js');
 const {agent, options} = require('../constants.js');
 
+const controller = new CartController()
 router.post('/carts',async (req,res) => {
     console.log(`called /carts`);
     try{
@@ -13,7 +14,7 @@ router.post('/carts',async (req,res) => {
             httpsAgent: agent,
             headers: options.headers
         });
-        res.status(201).send({id:cartToken.data});
+        res.status(201).send({id:cartToken.data,version:0,customerId:null,lineItems:[],totalPrice:{currencyCode:"USD",centAmount:0},totalQuantity:0});
     }catch(error){
         console.log(error);
         return 'Could not find a cart with such ID';
@@ -30,7 +31,9 @@ router.get('/carts/:id',async (req,res) => {
             httpsAgent: agent,
             headers: options.headers
         })
-        res.status(200).send({id:cartData.data});
+        const storefrontCart = controller.formatMagentoCarToStorefront(cartData.data,req.params['id'])
+        console.log('CARTS ID: ',storefrontCart)
+        res.status(200).send(storefrontCart);
     }catch(error){
         console.log(error);
         return 'Could not find a cart with such ID';
@@ -38,17 +41,8 @@ router.get('/carts/:id',async (req,res) => {
 });
 
 router.put('/carts/:id', async (req, res) => {
-    try{
-        const cartData = await axios.put(`https://magento.test/rest/V1/guest-carts/${req.params['id']}`, null,
-        {
-            httpsAgent: agent,
-            headers: options.headers
-        })
-        res.status(200).send(cartData);
-    }catch(error){
-        console.log(error);
-        return 'Could not find a cart with such ID';
-    }
+    console.log(req.body)
+    return await controller.determineAction(req);
 });
 
 module.exports = router
