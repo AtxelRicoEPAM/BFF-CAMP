@@ -31,7 +31,8 @@ router.get('/carts/:id',async (req,res) => {
             httpsAgent: agent,
             headers: options.headers
         })
-        const storefrontCart = controller.formatMagentoCarToStorefront(cartData.data,req.params['id'])
+        const storefrontCart = await controller.formatMagentoCarToStorefront(cartData.data,req.params['id'])        
+
         console.log('CARTS ID: ',storefrontCart)
         res.status(200).send(storefrontCart);
     }catch(error){

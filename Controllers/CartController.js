@@ -27,7 +27,7 @@ class CartController {
                         name: "",
                         price: 0,
                         product_type: "",
-                        quoteId: cartId
+                        quoteId: cartId,
                     }
                 },
                 {
@@ -35,7 +35,7 @@ class CartController {
                     headers: options.headers,
                 })
             console.log(magentoResult.data)
-            return magentoResult
+            return magentoResult.data
         } catch (error) {
             console.log(error)
             return error
@@ -65,39 +65,62 @@ class CartController {
     }
 
     async RemoveLineItem(body, cartId) {
-        console.log('CHANGE URL ', `https://magento.test/rest/V1/guest-carts/${cartId}/items/${body.ChangeLineItemQuantity.lineItemId}`)
+        console.log('DELETE URL ', `https://magento.test/rest/V1/guest-carts/${cartId}/items/${body.ChangeLineItemQuantity.lineItemId}`)
         try {
             const magentoResult = await axios.delete(`https://magento.test/rest/V1/guest-carts/${cartId}/items/${body.ChangeLineItemQuantity.lineItemId}`,
                 {
                     httpsAgent: agent,
                     headers: options.headers,
                 })
-            console.log('CHANGE RESULT ', magentoResult.data)
+            console.log('DELETE RESULT ', magentoResult.data)
             return magentoResult.data
         } catch (error) {
             console.log(error)
-            return 'Could not change item quantity'
+            return 'Could not DELETE item from cart'
         }
     }
 
     getTotalPrice(lineItems) {
         const totalAmount = lineItems.reduce((accumulator, current) =>
-            accumulator + current.price
+            {
+            console.log(`total del carrito ${accumulator}`)
+            console.log(`precio line ${current.prices[0].value.centAmount * current.qty}`)
+            return accumulator + (current.prices[0].value.centAmount * current.qty)
+            }
+            
             , 0)
+        
         return {
             currencyCode: "USD",
-            centAmount: totalAmount * 100
+            centAmount: totalAmount
         }
     }
-    formatMagentoCarToStorefront(magentoCar, cartId) {
+    async formatMagentoCarToStorefront(magentoCart, cartId) {     
+        const variants = await Promise.all(await this.getVariantForEachLineItem(magentoCart.items))
         return {
             version: 0,
             customerId: null,
-            lineItems: magentoCar.items,
-            totalPrice: this.getTotalPrice(magentoCar.items),
-            totalQuantity: magentoCar.items_qty,
-            id: cartId
-        }
+            lineItems: variants,
+            totalPrice: this.getTotalPrice(variants),
+            totalQuantity: magentoCart.items_qty,
+            id: cartId,
+
+        } 
+    }
+    
+    async getVariantForEachLineItem(lineItems){
+        return await lineItems.map(async (current, index)=>{
+            const {prices, images, masterVariant} = await ProductController.getProductBySKU(current.sku);
+            current.id = current.item_id;
+            current.prices = prices;            
+            current.variant = masterVariant;
+            current.images = [ images ];
+            current.quantity = current.qty;
+            current.totalPrice = prices[0].value.centAmount*current.qty;        
+            current.productId = current.item_id;
+            current.variant.name = current.name;            
+            return current
+        });    
     }
 }
 

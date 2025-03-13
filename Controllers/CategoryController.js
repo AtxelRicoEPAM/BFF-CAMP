@@ -55,7 +55,7 @@ class CategoryController {
         // Helper function to format images
         function formatImages(imageFile) {
             return [{
-                url: `https://magento.test/media/catalog/product/${imageFile}`
+                url: `http://magento.test/media/catalog/product/${imageFile}`
             }];
         }
 
