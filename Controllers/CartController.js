@@ -2,13 +2,15 @@ const axios = require('axios').default;
 const { agent, options } = require('../constants.js');
 
 const { ProductController } = require('./ProductController.js');
+const { CheckoutController } = require('./CheckoutController.js');
 class CartController {
 
     constructor() {
         this.actionsMap = {
             'AddLineItem': this.AddLineItem,
             'ChangeLineItemQuantity': this.ChangeLineItemQuantity,
-            'RemoveLineItem': this.RemoveLineItem
+            'RemoveLineItem': this.RemoveLineItem,
+            'SetShippingAddress': this.SetShippingAddress,
         }
     }
     async determineAction(requestObject) {
@@ -121,6 +123,13 @@ class CartController {
             current.variant.name = current.name;            
             return current
         });    
+    }
+
+
+    async SetShippingAddress(body,cartId){
+        console.log('Set shipping address');
+        return await CheckoutController.SetShippingAddress(body,cartId);
+        
     }
 }
 
