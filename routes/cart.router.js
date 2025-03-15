@@ -3,6 +3,7 @@ const axios = require('axios').default;
 const router = express.Router();
 
 const {CartController} = require('../controllers/CartController.js');
+const {CheckoutController} = require('../controllers/CheckoutController.js');
 const {agent, options} = require('../constants.js');
 
 const controller = new CartController()
@@ -45,6 +46,16 @@ router.put('/carts/:id', async (req, res) => {
     console.log(req.body)
     try{
         res.status(201).send(await controller.determineAction(req));
+    }catch(error){
+        res.status(400).send({message:`something went wrong. ${error}`});
+
+    }
+});
+
+router.post('/carts/:id/order', async (req,res) => {
+    console.log('Create order')
+    try{
+        res.status(201).send(await CheckoutController.createOrder(req.params['id']));
     }catch(error){
         res.status(400).send({message:`something went wrong. ${error}`});
 

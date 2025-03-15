@@ -84,9 +84,7 @@ class CartController {
 
     getTotalPrice(lineItems) {
         const totalAmount = lineItems.reduce((accumulator, current) =>
-            {
-            console.log(`total del carrito ${accumulator}`)
-            console.log(`precio line ${current.prices[0].value.centAmount * current.qty}`)
+            {            
             return accumulator + (current.prices[0].value.centAmount * current.qty)
             }
             
