@@ -2,7 +2,7 @@ const axios = require('axios').default;
 const { agent, options } = require('../constants.js');
 class CheckoutController {
     static async SetShippingAddress(body, cartId) {
-        console.log(body, 'cart ' + cartId)        
+        console.log(body, 'cart ' + cartId)
         const shippingMethod = await CheckoutController.getShippingMethod(cartId, body)
         console.log('SHIPPING METHOD', shippingMethod)
         const addressInfo = {
@@ -15,6 +15,7 @@ class CheckoutController {
                 "city": body.SetShippingAddress.city,
                 "region": body.SetShippingAddress.region,
                 "email": body.SetShippingAddress.email,
+                "telephone": body.SetShippingAddress.telephone ? body.SetShippingAddress.telephone : '3111310012'
             }
         }
         console.log('ADDRESS INFO ', {
@@ -35,6 +36,8 @@ class CheckoutController {
                     httpsAgent: agent,
                     headers: options.headers,
                 });
+            const billingAdressResult = await CheckoutController.setBillingAdress(cartId, body);
+            console.log('BILLING ADDRESS RESULT ', billingAdressResult)
             console.log('ADDRESS RESULT ', magentoResult.data)
             return magentoResult.data
         } catch (error) {
@@ -81,6 +84,41 @@ class CheckoutController {
             return magentoResult.data
         } catch (error) {
             console.log(error.toJSON())
+            return error
+        }
+    }
+
+    static async setBillingAdress(cartId, body) {
+        try {
+            const magentoResult = await axios.post(`https://magento.test/rest/V1/guest-carts/${cartId}/set-payment-information`,
+                {
+                    email: body.SetShippingAddress.email,
+                    paymentMethod: {
+                        method: 'checkmo'
+                    },
+                    billingAddress: {
+                        "city": body.SetShippingAddress.city,
+                        "country_id": body.SetShippingAddress.country,
+                        "email": body.SetShippingAddress.email,
+                        "firstname": body.SetShippingAddress.firstName,
+                        "lastname": body.SetShippingAddress.lastName,
+                        "postcode": body.SetShippingAddress.postalCode,
+                        "region": body.SetShippingAddress.region,
+                        "region_code":'BER',
+                        "region_id":'82',
+                        "street": [body.SetShippingAddress.streetName],
+                        "telephone": body.SetShippingAddress.telephone ? body.SetShippingAddress.telephone : '3111310012'
+                    }
+
+                },
+                {
+                    httpsAgent: agent,
+                    headers: options.headers,
+                })
+            console.log('billing address ', magentoResult.data)
+            return magentoResult.data
+        } catch (error) {
+            console.log(error)
             return error
         }
     }

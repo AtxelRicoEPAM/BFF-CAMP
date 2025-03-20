@@ -1,6 +1,7 @@
 const express = require('express');
 const axios = require('axios').default;
 const router = express.Router();
+const {uuid} = require('uuidv4');
 
 const {CartController} = require('../controllers/CartController.js');
 const {CheckoutController} = require('../controllers/CheckoutController.js');
@@ -55,10 +56,12 @@ router.put('/carts/:id', async (req, res) => {
 router.post('/carts/:id/order', async (req,res) => {
     console.log('Create order')
     try{
-        res.status(201).send(await CheckoutController.createOrder(req.params['id']));
+        res.status(201).send({
+            message:'Order created succesfully',
+            reserved_order_id: await CheckoutController.createOrder(req.params['id'])
+        });
     }catch(error){
         res.status(400).send({message:`something went wrong. ${error}`});
-
     }
 });
 
