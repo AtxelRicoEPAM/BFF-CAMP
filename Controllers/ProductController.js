@@ -132,8 +132,6 @@ class ProductController {
     }
 
     static async transformMagentoProductToStorefront(magentoProduct) {
-        console.log('MAGENTO PRODUCT '+magentoProduct)
-
         function arrayToCSV(arrayToTransform) {
             const stringGenerated = arrayToTransform.reduce((accumulator, current) =>
                 accumulator + `,${current}`
@@ -204,7 +202,7 @@ class ProductController {
 
         function formatImages(imageFile) {
             return [{
-                url: `https://magento.test/media/catalog/product${imageFile}`
+                url: `http://magento.test/media/catalog/product${imageFile}`
             }
             ]
         }
@@ -274,12 +272,26 @@ class ProductController {
                         }
                     }
                 ],
-                "slug": "stellar-solar-jacket-s-blue",
-                "name": "Stellar Solar Jacket-S-Blue"
+                "slug": storefrontProduct.slug,
+                "name": storefrontProduct.name
             }
         }
 
         return storefrontProduct;
+    }
+
+    static async getProductBySKU(sku) {
+        try{
+            const productData =  await axios.get(`http://localhost:80/rest/default/V1/products/${sku}`,
+                {
+                    httpsAgent: agent,
+                    headers: options.headers
+                })
+            return await ProductController.transformMagentoProductToStorefront(productData.data)
+        } catch(error){
+            console.log(error)
+            return 'Could not get product by SKU'
+        }
     }
 }
 
