@@ -129,6 +129,10 @@ class CategoryController {
             };
         }));
     }
+
+    static async getCMToolsCategories(){
+        
+    }
 }
 
 exports.CategoryController = CategoryController
