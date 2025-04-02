@@ -21,7 +21,7 @@ router.get('/products',async (req,res)=>{
         })
         .then(async (result) => {
             console.log('Success ',result)            
-            res.status(201).send(CmToolsController.transformNameToStoreFront(result.data))
+            res.status(201).send(CmToolsController.transformTextsToStoreFront(result.data))
         }
         )
         .catch(function (error) {
@@ -30,23 +30,26 @@ router.get('/products',async (req,res)=>{
         })
 });
 
-router.get('/products/:sku', (req,res) => {
-    console.log(req.params)
-    console.log('called /products/sku '+req.params['sku'])
-    axios.get(`http://localhost:80/rest/default/V1/products/${req.params['sku']}`,
+router.get('/products/:sku', async (req,res) => {
+    console.log(req.params);
+    console.log('called /products/sku '+req.params['sku']);
+    const accessToken = await CmToolsController.getCmToolsAccessToken(clientId,clientSecret);
+    axios.get(`${CMTOOLS_API_URL}/atxel-rico-camp/product-projections/search?filter=variants.sku:"${req.params['sku']}"`,
         {
             httpsAgent: agent,
-            headers: options.headers
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken.data.access_token}`
+            }
         })
-        .then(async (result) => {
-            
-            //res.status(201).send(await ProductController.transformMagentoProductToStorefront(result.data))
+        .then(async (result) => {            
+            res.status(201).send(CmToolsController.transformTextsToStoreFront(result.data).results[0])
         }
         )
         .catch(function (error) {
             console.log(error)
             res.status(400).send(error.data)
         })
-})
+});
 
 module.exports = router;

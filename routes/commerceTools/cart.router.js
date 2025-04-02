@@ -6,18 +6,25 @@ const {uuid} = require('uuidv4');
 const {CartController} = require('../../controllers/CartController.js');
 const {CheckoutController} = require('../../controllers/CheckoutController.js');
 const {CmToolsController} = require('../../controllers/CmToolsController.js');
-const {clientId,clientSecret, agent } = require('../../constants.js');
+const {clientId,clientSecret, agent, CMTOOLS_API_URL } = require('../../constants.js');
 
 const controller = new CartController()
 router.post('/carts',async (req,res) => {
     console.log(`called /carts`);
+    const accessToken = await CmToolsController.getCmToolsAccessToken(clientId,clientSecret);
     try{
-        const cartToken = await axios.post('https://magento.test/rest/V1/guest-carts', null,
+        const cartToken = await axios.post(`${CMTOOLS_API_URL}/atxel-rico-camp/carts`, 
+        {
+            currency:'USD'
+        },
         {
             httpsAgent: agent,
-            headers: options.headers
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken.data.access_token}`
+            }
         });
-        res.status(201).send({id:cartToken.data,version:0,customerId:null,lineItems:[],totalPrice:{currencyCode:"USD",centAmount:0},totalQuantity:0});
+        res.status(201).send({id:cartToken.data['id'],customerId:null,lineItems:cartToken.data['lineItems'],totalPrice:cartToken.data['totalPrice'],totalQuantity:cartToken.data['lineItems'].length,version:cartToken.data['version']});
     }catch(error){
         console.log(error);
         return 'Could not find a cart with such ID';
