@@ -51,10 +51,7 @@ class CmToolsCartController {
 
     async ChangeLineItemQuantity(body, cartId) {
         console.log(body, 'Change quantity ' + cartId);
-        const cartData = await CmToolsCartController.getCartById(cartId);
-        const item = cartData['lineItems'].find( (cartItem) => cartItem.id === body.ChangeLineItemQuantity.lineItemId);
-        console.log('FOUND',body.ChangeLineItemQuantity.lineItemId);
-
+        const cartData = await CmToolsCartController.getCartById(cartId);        
         const accessToken = await CmToolsController.getCmToolsAccessToken(clientId, clientSecret);
         try {
             const cartToken = await axios.post(`${CMTOOLS_API_URL}/atxel-rico-camp/carts/${cartId}`,
@@ -72,8 +69,7 @@ class CmToolsCartController {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${accessToken.data.access_token}`
                     }
-                });
-            console.log('RES ',cartToken.data);
+                });            
             return { id: cartToken.data['id'], customerId: null, lineItems: cartToken.data['lineItems'], totalPrice: cartToken.data['totalPrice'], totalQuantity: cartToken.data['lineItems'].length, version: cartToken.data['version'] };
         } catch (error) {
             console.log(error);
@@ -82,18 +78,29 @@ class CmToolsCartController {
     }
 
     async RemoveLineItem(body, cartId) {
-        console.log('DELETE URL ', `https://magento.test/rest/V1/guest-carts/${cartId}/items/${body.ChangeLineItemQuantity.lineItemId}`)
+        console.log('DELETE',body)
+        const cartData = await CmToolsCartController.getCartById(cartId);        
+        const accessToken = await CmToolsController.getCmToolsAccessToken(clientId, clientSecret);
         try {
-            const magentoResult = await axios.delete(`https://magento.test/rest/V1/guest-carts/${cartId}/items/${body.ChangeLineItemQuantity.lineItemId}`,
+            const cartToken = await axios.post(`${CMTOOLS_API_URL}/atxel-rico-camp/carts/${cartId}`,
+                JSON.stringify({
+                    "version": cartData["version"],
+                    "actions": [{
+                        "action": "removeLineItem",
+                        "lineItemId": body.RemoveLineItem.lineItemId,                                                
+                    }]
+                }),
                 {
                     httpsAgent: agent,
-                    headers: options.headers,
-                })
-            console.log('DELETE RESULT ', magentoResult.data)
-            return magentoResult.data
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken.data.access_token}`
+                    }
+                });            
+            return { id: cartToken.data['id'], customerId: null, lineItems: cartToken.data['lineItems'], totalPrice: cartToken.data['totalPrice'], totalQuantity: cartToken.data['lineItems'].length, version: cartToken.data['version'] };
         } catch (error) {
-            console.log(error)
-            return 'Could not DELETE item from cart'
+            console.log(error);
+            return 'Could not remove product from cart';
         }
     }
 
