@@ -3,12 +3,12 @@ const axios = require('axios').default;
 const router = express.Router();
 const {uuid} = require('uuidv4');
 
-const {CartController} = require('../../controllers/CartController.js');
+const { CmToolsCartController } = require('../../controllers/CmToolsCartController.js');
 const {CheckoutController} = require('../../controllers/CheckoutController.js');
 const {CmToolsController} = require('../../controllers/CmToolsController.js');
 const {clientId,clientSecret, agent, CMTOOLS_API_URL } = require('../../constants.js');
 
-const controller = new CartController()
+const controller = new CmToolsCartController()
 router.post('/carts',async (req,res) => {
     console.log(`called /carts`);
     const accessToken = await CmToolsController.getCmToolsAccessToken(clientId,clientSecret);
@@ -35,16 +35,21 @@ router.get('/carts/:id',async (req,res) => {
     if(req.params['id']==='mocked-cart-id')
         return {message:'mocked-cart'}
     console.log(`called /carts/${req.params['id']}`);
+    const accessToken = await CmToolsController.getCmToolsAccessToken(clientId,clientSecret);
     try{
-        const cartData = await axios.get(`https://magento.test/rest/V1/guest-carts/${req.params['id']}`,
-        {
-            httpsAgent: agent,
-            headers: options.headers
-        })
-        const storefrontCart = await controller.formatMagentoCarToStorefront(cartData.data,req.params['id'])        
-
-        console.log('CARTS ID: ',storefrontCart)
-        res.status(200).send(storefrontCart);
+        const storefrontCart = await axios.get(`${CMTOOLS_API_URL}/atxel-rico-camp/carts/${req.params['id']}`,
+            {
+                httpsAgent: agent,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken.data.access_token}`
+                }
+            });     
+        
+        let cart = storefrontCart.data
+        console.log('strfront cart',cart)   
+        cart = CmToolsController.transformCartTextsToStorefront(cart);
+        res.status(200).send(cart);
     }catch(error){
         console.log(error);
         return 'Could not find a cart with such ID';

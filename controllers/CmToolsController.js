@@ -31,6 +31,14 @@ class CmToolsController {
     static getCMToolsCategoryId(storefrontId) {
         return categoriesMap[storefrontId];
     }
+
+    static transformCartTextsToStorefront(cart){
+        const cartTransformed = cart['lineItems'].map( (lineItem) => { return {...lineItem, productSlug: lineItem.productSlug['en-US'], variant: {...lineItem.variant, name: lineItem.name['en-US']}}});
+        let cartDict = cart;
+        cartDict['lineItems'] = cartTransformed;
+        console.log(cartDict)
+        return cartDict;
+    }
 }
 
 exports.CmToolsController = CmToolsController;

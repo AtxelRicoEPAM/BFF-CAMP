@@ -19,8 +19,7 @@ router.get('/products',async (req,res)=>{
                     'Authorization': `Bearer ${accessToken.data.access_token}`
                 }
         })
-        .then(async (result) => {
-            console.log('Success ',result)            
+        .then(async (result) => {                   
             res.status(201).send(CmToolsController.transformTextsToStoreFront(result.data))
         }
         )
