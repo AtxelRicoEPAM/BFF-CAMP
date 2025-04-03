@@ -19,7 +19,7 @@ class CmToolsCartController {
     }
 
     async AddLineItem(body, cartId) {
-        console.log(body, 'PIMIENTO ' + cartId);
+        console.log(body, 'AddLineItem ' + cartId);
         const productData = await CmToolsCartController.getProductBySKU(body.AddLineItem.variantId);
         console.log('product', productData);
         
@@ -50,24 +50,34 @@ class CmToolsCartController {
     }
 
     async ChangeLineItemQuantity(body, cartId) {
-        console.log('CHANGE URL ', `https://magento.test/rest/V1/guest-carts/${cartId}/items/${body.ChangeLineItemQuantity.lineItemId}`)
+        console.log(body, 'Change quantity ' + cartId);
+        const cartData = await CmToolsCartController.getCartById(cartId);
+        const item = cartData['lineItems'].find( (cartItem) => cartItem.id === body.ChangeLineItemQuantity.lineItemId);
+        console.log('FOUND',body.ChangeLineItemQuantity.lineItemId);
+
+        const accessToken = await CmToolsController.getCmToolsAccessToken(clientId, clientSecret);
         try {
-            const magentoResult = await axios.put(`https://magento.test/rest/V1/guest-carts/${cartId}/items/${body.ChangeLineItemQuantity.lineItemId}`,
-                {
-                    cartItem: {
-                        item_id: body.ChangeLineItemQuantity.lineItemId,
-                        qty: body.ChangeLineItemQuantity.quantity
-                    }
-                },
+            const cartToken = await axios.post(`${CMTOOLS_API_URL}/atxel-rico-camp/carts/${cartId}`,
+                JSON.stringify({
+                    "version": cartData["version"],
+                    "actions": [{
+                        "action": "changeLineItemQuantity",
+                        "lineItemId": body.ChangeLineItemQuantity.lineItemId,                        
+                        "quantity": body.ChangeLineItemQuantity.quantity
+                    }]
+                }),
                 {
                     httpsAgent: agent,
-                    headers: options.headers,
-                })
-            console.log('CHANGE RESULT ', magentoResult.data)
-            return magentoResult.data
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken.data.access_token}`
+                    }
+                });
+            console.log('RES ',cartToken.data);
+            return { id: cartToken.data['id'], customerId: null, lineItems: cartToken.data['lineItems'], totalPrice: cartToken.data['totalPrice'], totalQuantity: cartToken.data['lineItems'].length, version: cartToken.data['version'] };
         } catch (error) {
-            console.log(error)
-            return 'Could not change item quantity'
+            console.log(error);
+            return 'Could not update quantity';
         }
     }
 
@@ -168,6 +178,28 @@ class CmToolsCartController {
 
     static getVariantIdBySKU(variants,sku){
         return variants.map( (variant) => variant.sku === sku).id;
+    }
+
+    static async getCartById(cartId){
+        const accessToken = await CmToolsController.getCmToolsAccessToken(clientId,clientSecret);
+        try{
+                const storefrontCart = await axios.get(`${CMTOOLS_API_URL}/atxel-rico-camp/carts/${cartId}`,
+                    {
+                        httpsAgent: agent,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${accessToken.data.access_token}`
+                        }
+                    });     
+                
+                let cart = storefrontCart.data
+                console.log('strfront cart',cart)   
+                cart = CmToolsController.transformCartTextsToStorefront(cart);
+                return cart
+            }catch(error){
+                console.log(error);
+                return 'Could not find a cart with such ID';
+            }
     }
 }
 
