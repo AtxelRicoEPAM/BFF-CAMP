@@ -1,10 +1,10 @@
 const express = require('express');
 const axios = require('axios').default;
 const router = express.Router();
-const {uuid} = require('uuidv4');
+const {v4: uuidv4} = require('uuid');
 
 const { CmToolsCartController } = require('../../controllers/CmToolsCartController.js');
-const {CheckoutController} = require('../../controllers/CheckoutController.js');
+const {CmToolsCheckoutController} = require('../../controllers/CmToolsCheckoutController.js');
 const {CmToolsController} = require('../../controllers/CmToolsController.js');
 const {clientId,clientSecret, agent, CMTOOLS_API_URL } = require('../../constants.js');
 
@@ -71,11 +71,17 @@ router.post('/carts/:id/order', async (req,res) => {
     try{
         res.status(201).send({
             message:'Order created succesfully',
-            reserved_order_id: await CheckoutController.createOrder(req.params['id'])
+            reserved_order_id: await CmToolsCheckoutController.createOrder(req.params['id'])
         });
     }catch(error){
         res.status(400).send({message:`something went wrong. ${error}`});
     }
 });
+
+router.post('/checkout', (req, res) => {
+    console.log('checkout',req.query)
+    console.log({data: {id:uuidv4()}})
+    res.status(201).send({data: {id:uuidv4()}})
+})
 
 module.exports = router
