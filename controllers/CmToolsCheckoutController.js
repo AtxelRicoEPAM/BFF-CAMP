@@ -11,7 +11,7 @@ class CmToolsCheckoutController {
         console.log('version', version)
         const accessToken = await CmToolsController.getCmToolsAccessToken(clientId, clientSecret);
         try {
-            const cartToken = await axios.post(`${CMTOOLS_API_URL}/atxel-rico-camp/carts/${cartId}`,
+            const cartToken = await axios.post(`${CMTOOLS_API_URL}/atxel-rico-camp/orders`,
                 {
                     "version": version,
                     "cart": {
@@ -29,7 +29,7 @@ class CmToolsCheckoutController {
             return { id: cartToken.data['id'], customerId: null, lineItems: cartToken.data['lineItems'], totalPrice: cartToken.data['totalPrice'], totalQuantity: cartToken.data['lineItems'].length, version: cartToken.data['version'] };
         } catch (error) {
             console.log(error);
-            return 'Could not create an error';
+            return error;
         }
     }
 }
